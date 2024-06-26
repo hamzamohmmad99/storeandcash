@@ -74,20 +74,37 @@ class CatModelImp extends CatService {
   
   
 }
-Future<void> fetchAndStoreCats() async {
-  Dio dio=Dio();
-   final response = await dio.get('https://freetestapi.com/api/v1/cats');
-    if (response.statusCode == 200) {
-    final List<CatModelHive> catsJson = List.generate(response.data.length, (index) => CatModelHive.fromMap(response.data[index]));
-    var box = Hive.box<CatModelHive>('catsBox');
 
-     for (var cat in catsJson) {
-     
-      box.add(cat);
-    
-      
+ class ServiceCatHive {
+   
+
+Future<List<CatModelHive>> fetchCats() async {
+  Dio dio=Dio();
+  try {
+    Response response = await dio.get("https://freetestapi.com/api/v1/cats");
+
+    if (response.statusCode == 200) {
+      List jsonResponse = response.data;
+      List<CatModelHive> birds = [];
+
+      for (var catsData in jsonResponse) {
+        // Check if all required fields are not null
+        if (catsData['name'] != null && catsData['origin'] != null && catsData['image'] != null) {
+          birds.add(CatModelHive(
+            name: catsData['name'],
+            origin: catsData['origin'],
+            image: catsData['image'],
+          ));
+        }
+      }
+
+      return birds;
+    } else {
+      throw Exception('Failed to load ctas');
     }
-  } else {
-    throw Exception('Failed to load cats');
+  } catch (e) {
+    throw Exception('Failed to load cats: $e');
   }
 }
+
+ }
